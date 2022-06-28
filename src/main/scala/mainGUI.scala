@@ -228,7 +228,7 @@ class Play(val game: Game) extends SimpleSwingApplication {
           key match {
             case Key.Right => char = 'r'
             case Key.Left => char = 'l'
-            case Key.Up => char = 'g'
+            case Key.Up => char = 'u'
             case Key.Down => char = 'd'
             case _ => println("Invalid key")
           }
@@ -754,7 +754,7 @@ object FirstSwingApp extends SimpleSwingApplication {
               key match {
                 case Key.Right => char = 'r'
                 case Key.Left => char = 'l'
-                case Key.Up => char = 'g'
+                case Key.Up => char = 'u'
                 case Key.Down => char = 'd'
                 case _ => println("Invalid key")
               }

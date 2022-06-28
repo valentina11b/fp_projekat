@@ -45,14 +45,14 @@ class Game(
 
 
   def makeAMoveForSolver(move: Char): Option[((Int, Int), Option[(Int, Int)])] = {
-    require(move == 'd' || move == 'g' || move == 'l' || move == 'r')
+    require(move == 'd' || move == 'u' || move == 'l' || move == 'r')
 
     var nextPosition: ((Int, Int), Option[(Int, Int)]) = ((0, 0), None)
 
     (currentPosition, move) match {
       case ((position, None), 'd') =>
         nextPosition = ((position._1 + 2, position._2), Some((position._1 + 1, position._2)))
-      case ((position, None), 'g') =>
+      case ((position, None), 'u') =>
         nextPosition = ((position._1 - 1, position._2), Some(position._1 - 2, position._2))
       case ((position, None), 'l') =>
         nextPosition = ((position._1, position._2 - 2), Some((position._1, position._2 - 1)))
@@ -64,7 +64,7 @@ class Game(
           nextPosition = ((position1._1 + 1, position1._2), Some(position2._1 + 1, position2._2))
         else
           nextPosition = ((position1._1 + 1, position1._2), None)
-      case ((position1, Some(position2)), 'g') =>
+      case ((position1, Some(position2)), 'u') =>
         if (position1._1 == position2._1)
           nextPosition = ((position1._1 - 1, position1._2), Some(position2._1 - 1, position2._2))
         else

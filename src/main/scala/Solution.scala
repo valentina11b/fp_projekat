@@ -223,13 +223,13 @@ class Solution {
     checkSequenceRec(moveList, List())
   }
 
-  val moves = List('d', 'g', 'l', 'r')
+  val moves = List('d', 'u', 'l', 'r')
 
 
   def getMoveChar(move: Int): Char = {
     move match {
       case 0 => 'd'
-      case 1 => 'g'
+      case 1 => 'u'
       case 2 => 'l'
       case 3 => 'r'
       case _ => 'x'
@@ -239,7 +239,7 @@ class Solution {
   def getMoveInt(move: Char): Int = {
     move match {
       case 'd' => 0
-      case 'g' => 1
+      case 'u' => 1
       case 'l' => 2
       case 'r' => 3
       case _ => 4
