@@ -126,4 +126,14 @@ object BloxorzMap {
     loadMap(Source.fromFile(file), file.replace(".txt", ""))
   }
 
+  def checkMapPattern(map: Array[String]) : Unit = {
+    for ((line, i) <- map.zipWithIndex) {
+      val Pattern = "([STo\\-.]+)".r
+      line match {
+        case Pattern(_) =>
+        case _ =>
+          println(f"Invalid character at line $i. : $line")
+      }
+    }
+  }
 }
