@@ -15,8 +15,9 @@ import scala.io.{BufferedSource, Source}
 import scala.swing.{Dimension, *}
 import scala.swing.event.*
 import javax.swing.filechooser.FileNameExtensionFilter
-import scala.swing.Dialog.{Message, uiString}
+import scala.swing.Dialog.{Message, Options, uiString}
 import scala.swing.Swing.{EmptyIcon, PeerContainer, nullPeer}
+import scala.swing.TextField
 
 case class PopUpMenuEvent(f: Field, x: Int, y: Int, clicks: Int) extends Event
 
@@ -602,25 +603,165 @@ class ShowSolution(val game: Game, val solution: Option[List[Char]]) extends Sim
   }
 }
 
+//enum Command {
+//  case removeFromTheEdge(name: "Remove From The Edge")
+//  case addToTheEdge(name: "Add To The Edge")
+//  case ordinaryToSpecial(name: "Ordinary To Special")
+//  case specialToOrdinary(name: "Special To Ordinary")
+//  case changeStart(name: "Change Start")
+//  case changeEnd(name: "Change End")
+//  case Invert(name: "Invert")
+//  case Exchange(name: "Exchange")
+//  case Filter(name: "Filter")
+//  case CustomCommand()
+//}
+
+object Commands {
+  var commands: mutable.ListBuffer[CustomCommand] = mutable.ListBuffer(CustomCommand("Remove From The Edge", None),
+    CustomCommand("Add To The Edge", None),
+    CustomCommand("Ordinary To Special", None),
+    CustomCommand("Special To Ordinary", None),
+    CustomCommand("Change Start", None),
+    CustomCommand("Change End", None),
+    CustomCommand("Invert", None),
+    CustomCommand("Exchange", None),
+    CustomCommand("Filter", None))
+
+
+  def addCommand(command: CustomCommand): Unit = {
+    commands.append(command)
+  }
+}
+//
+//object Sequence {
+//  var commands: mutable.ListBuffer[CustomCommand] = mutable.ListBuffer(CustomCommand("Remove From The Edge", None),
+//    CustomCommand("Add To The Edge", None),
+//    CustomCommand("Ordinary To Special", None),
+//    CustomCommand("Special To Ordinary", None),
+//    CustomCommand("Change Start", None),
+//    CustomCommand("Change End", None),
+//    CustomCommand("Invert", None),
+//    CustomCommand("Exchange", None),
+//    CustomCommand("Filter", None))
+//
+//
+//  def addCommand(command: CustomCommand): Unit = {
+//    commands.append(command)
+//  }
+//}
+
+class CustomCommand(val name: String, val commands: Option[Seq[CustomCommand]]) {
+
+  override def toString: String = {
+    name
+  }
+
+}
+
+
+class CreateCustomCommand() extends SimpleSwingApplication {
+
+  def top = new Frame {
+    title = "Bloxorz - Create Command"
+    contents = new BoxPanel(Orientation.Horizontal) {
+      peer.add(Box.createHorizontalStrut(30))
+      contents += new BoxPanel(Orientation.Vertical) {
+        peer.add(Box.createVerticalStrut(10))
+        val nameField = new TextField()
+        nameField.text = ""
+        val list = swing.ListView[CustomCommand](Commands.commands)
+        contents += new BoxPanel(Orientation.Horizontal) {
+          contents += new Label("Name")
+          contents += Swing.HStrut(5)
+          contents += nameField
+        }
+        peer.add(Box.createVerticalStrut(10))
+        contents += list
+        peer.add(Box.createVerticalStrut(10))
+        contents += new GridPanel(1, 1) {
+          contents += Button("Save") {
+            if (list.selection.items.size > 0 && !nameField.text.isBlank) {
+              Commands.addCommand(CustomCommand(nameField.text, Some(list.selection.items)))
+              close()
+            }else {
+              Dialog.showMessage(contents.head, "Please enter name and select at least one option", title = "Failed", messageType = Message.Error)
+            }
+
+          }
+        }
+        peer.add(Box.createVerticalStrut(10))
+      }
+
+      peer.add(Box.createHorizontalStrut(30))
+    }
+
+  }
+}
+
 
 class EditMap(val game: Game) extends SimpleSwingApplication {
 
   type Matrix = Array[Array[Field]]
 
+
   def top = new Frame {
     title = "Bloxorz - Edit Map"
-    var fields = mutable.ListBuffer[Field]()
+    val fields = mutable.ListBuffer[Field]()
     var startFiledIndex = 0
     var endFieldIndex = 0
+
+    def checkIfEdge(field: Field): Boolean = {
+      val i = field.i
+      val j = field.j
+      val N = game.map(0).length
+      val M = game.map.length
+      if ((i + 1 < M && fields((i + 1) * N + j).color != Color.WHITE)
+        || (i - 1 >= 0 && fields((i - 1) * N + j).color != Color.WHITE)
+        || (j + 1 < N && fields(i * N + j + 1).color != Color.WHITE)
+        || (j - 1 >= 0 && fields(i * N + j - 1).color != Color.WHITE)
+      ) {
+        true
+      } else {
+        false
+      }
+    }
+
+    def checkIfOnEdge(field: Field): Boolean = {
+      val i = field.i
+      val j = field.j
+      val N = game.map(0).length
+      val M = game.map.length
+      if (i + 1 == M || j + 1 == N || i == 0 || j == 0) {
+        true
+      } else if (fields((i + 1) * N + j).color == Color.WHITE
+        || fields((i - 1) * N + j).color == Color.WHITE
+        || fields(i * N + j + 1).color == Color.WHITE
+        || fields(i * N + j - 1).color == Color.WHITE
+      ) {
+        if(fields((i - 1) * N + j).color != Color.WHITE && fields((i + 1) * N + j).color != Color.WHITE
+        && fields(i * N + j + 1).color == Color.WHITE && fields(i * N + j - 1).color == Color.WHITE
+
+          ||
+
+          fields((i - 1) * N + j).color == Color.WHITE && fields((i + 1) * N + j).color == Color.WHITE
+            && fields(i * N + j + 1).color != Color.WHITE && fields(i * N + j - 1).color != Color.WHITE
+
+        ){
+          false
+        }else {
+          true
+        }
+      } else {
+        false
+      }
+    }
+
     contents = new BoxPanel(Orientation.Vertical) {
       background = new Color(232, 232, 232)
-      contents += new GridPanel(2, 1) {
+      contents += new GridPanel(1, 1) {
         contents += Button("Save and Exit") {
           saveMapToFile(game.name, fields)
           close()
-        }
-        contents += Button("Create composit operation") {
-
         }
       }
 
@@ -668,13 +809,22 @@ class EditMap(val game: Game) extends SimpleSwingApplication {
                   f.changeColor(Color.GRAY)
                 }
               }
-            case PopUpMenuEvent(field, x, y, clicks) =>
+            case PopUpMenuEvent(field, x, y, _) =>
               val popupMenu = new PopupMenu {
-                if (field.color == Color.WHITE) {
+                if (field.color == Color.WHITE && checkIfEdge(field)) {
                   contents += new MenuItem(Action("Add field") {
                     field.changeColor(Color.GRAY)
                   })
                 }
+
+                if (field.color == Color.GRAY || field.color == Color.ORANGE) {
+                  if(checkIfOnEdge(field)) {
+                    contents += new MenuItem(Action("Remove") {
+                      field.changeColor(Color.WHITE)
+                    })
+                  }
+                }
+
                 if (field.color == Color.GRAY) {
                   contents += new MenuItem(Action("Make special") {
                     field.changeColor(Color.ORANGE)
@@ -684,19 +834,7 @@ class EditMap(val game: Game) extends SimpleSwingApplication {
                   contents += new MenuItem(Action("Make ordinary") {
                     field.changeColor(Color.GRAY)
                   })
-                }
-                if (field.color == Color.YELLOW ||
-                  field.color == Color.GREEN
-                ) {
-                  contents += new MenuItem(Action("Inverzija") {
-                    fields(startFiledIndex).changeColor(Color.GREEN)
-                    fields(endFieldIndex).changeColor(Color.YELLOW)
-                    val tmp = startFiledIndex
-                    startFiledIndex = endFieldIndex
-                    endFieldIndex = tmp
-                  })
 
-                } else {
                   contents += new MenuItem(Action("Filter") {
                     val selection = Dialog.showInput(null, null, "Enter N", Dialog.Message.Plain, null, Nil, "1")
                     val N: Int = game.map(0).length
@@ -711,11 +849,15 @@ class EditMap(val game: Game) extends SimpleSwingApplication {
                             || (i - n > 0 && fields((i - n) * N + j).color == Color.ORANGE)
                             || (j - n > 0 && fields(i * N + j - n).color == Color.ORANGE)
                           ) {
-                            field.changeColor(Color.ORANGE)
+                            field.changeColor(Color.GRAY)
                           }
                         }
                     }
                   })
+                }
+                if (field.color != Color.YELLOW &&
+                  field.color != Color.GREEN
+                ) {
                   contents += new MenuItem(Action("Set as start") {
                     fields(startFiledIndex).changeColor(Color.GRAY)
                     startFiledIndex = fields.indexOf(field)
@@ -736,6 +878,28 @@ class EditMap(val game: Game) extends SimpleSwingApplication {
         peer.add(Box.createVerticalStrut(2))
       }
 
+      contents += new GridPanel(2, 2) {
+        contents += Button("Create operation") {
+          CreateCustomCommand().top.visible = true
+        }
+        contents += Button("Create sequence") {
+
+        }
+        contents += Button("Invert start and end") {
+          fields(startFiledIndex).changeColor(Color.GREEN)
+          fields(endFieldIndex).changeColor(Color.YELLOW)
+          val tmp = startFiledIndex
+          startFiledIndex = endFieldIndex
+          endFieldIndex = tmp
+        }
+        contents += Button("Make special ones ordinary") {
+          for(f<-fields){
+            if(f.color == Color.ORANGE) {
+              f.changeColor(Color.GRAY)
+            }
+          }
+        }
+      }
     }
   }
 }
