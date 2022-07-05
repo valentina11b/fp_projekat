@@ -51,9 +51,9 @@ class Solution {
 
     @tailrec
     def solver(move: Int, moveList: List[Char]): Option[List[Char]] = {
-      println("---------------------------------------")
-      println("move " + move)
-      println("movesList " + moveList.reverse.mkString("", ", ", ""))
+//      println("---------------------------------------")
+//      println("move " + move)
+//      println("movesList " + moveList.reverse.mkString("", ", ", ""))
 
       move match {
         case m if m > 3 =>
@@ -83,7 +83,7 @@ class Solution {
               moveList match {
                 case Nil => solver(move + 1, moveList)
                 case h :: t =>
-                  println("None: moveList.head " + getMoveInt(h))
+//                  println("None: moveList.head " + getMoveInt(h))
                   (getMoveInt(h), move + 1) match {
                     case (2, 3) | (_, 4) => solver(4, moveList)
                     case (0, 1) => solver(2, moveList)
@@ -102,5 +102,71 @@ class Solution {
     }
 
     solver(0, List())
+  }
+
+
+  // unused
+
+  def pickDirection(s: (Int, Int), e: (Int, Int)): List[Char] = {
+    (s, e) match {
+      case ((i, j), (m, n)) if i < m && j < n => List('u', 'r', 'd', 'l')
+      case ((i, j), (m, n)) if i < m && j > n => List('u', 'l', 'd', 'r')
+      case ((i, j), (m, n)) if i < m && j == n => List('u', 'd', 'l', 'r')
+
+      case ((i, j), (m, n)) if i == m && j < n => List('r', 'l', 'd', 'u')
+      case ((i, j), (m, n)) if i == m && j > n => List('l', 'd', 'd', 'u')
+
+      case ((i, j), (m, n)) if i > m && j < n => List('d', 'r', 'u', 'l')
+      case ((i, j), (m, n)) if i > m && j > n => List('d', 'l', 'u', 'r')
+      case ((i, j), (m, n)) if i > m && j == n => List('d', 'u', 'l', 'r')
+
+      case _ => List('d', 'u', 'l', 'r')
+    }
+  }
+
+  def solve1(game: Game): Option[List[Char]] = {
+
+    class Node(val move:Char, val moveList: List[Char]) {}
+
+    @tailrec
+    def goBack(nodes: List[Node]): Option[(Node, List[Node])] = {
+      nodes match {
+        case Nil => None
+        case h::t =>
+          h.moveList match {
+            case Nil => goBack(t)
+            case hMoves :: tMoves =>
+              Some(Node(hMoves, tMoves), t)
+          }
+      }
+    }
+
+    @tailrec
+    def solver(move: Node, nodes: List[Node]): Option[List[Char]] = {
+
+      checkSequence((move.move :: nodes.map(n => n.move)).reverse, game) match {
+        case Some(true) =>
+          println("Won")
+          Some((move.move :: nodes.map(n => n.move)).reverse)
+        case None =>
+          println("Lost, go back and try different route")
+          move.moveList match {
+            case Nil =>
+              goBack(nodes) match {
+                case None => None
+                case Some((move, nodes)) => solver(move, nodes)
+              }
+            case h::t =>
+              solver(Node(h, t), nodes)
+          }
+
+        case Some(false) =>
+          val pickedList = pickDirection(game.currentPosition._1, game.endPosition._1)
+          solver(Node(pickedList.head, pickedList.tail), move::nodes)
+      }
+    }
+
+    val startList = pickDirection(game.startPosition._1, game.endPosition._1)
+    solver(Node(startList.head, startList.tail), List())
   }
 }

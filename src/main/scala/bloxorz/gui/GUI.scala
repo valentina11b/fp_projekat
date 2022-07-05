@@ -130,14 +130,14 @@ class SelectMap(val menuSelection: MenuSelection) extends SimpleSwingApplication
                 menuSelection match {
                   case MenuSelection.NewGame =>
                     Play(game).top.visible = true
-                    close()
+//                    close()
                   case MenuSelection.MapEditor =>
                     EditMap(game).top.visible = true
                     close()
                   case MenuSelection.Solution =>
                     val solutionWindow = ShowSolution(game, Solution().solve(game))
                     solutionWindow.top.visible = true
-                    close()
+//                    close()
                 }
             }
         }
