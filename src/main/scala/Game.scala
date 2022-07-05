@@ -1,53 +1,46 @@
+type Position = ((Int, Int), Option[(Int, Int)])
+
 class Game(
             val name:String,
-            val startPosition: ((Int, Int), Option[(Int, Int)]),
-            val endPosition: ((Int, Int), Option[(Int, Int)]),
+            val startPosition: Position,
+            val endPosition: Position,
             var allowedPositions: List[(Int, Int)],
             var specialPositions: List[(Int, Int)],
-            val map: Array[String]
+            val map: Vector[Vector[Char]]
           ) {
 
-  var currentPosition: ((Int, Int), Option[(Int, Int)]) = startPosition
+  var currentPosition: Position = startPosition
+  val M: Int = map.length
+  val N: Int = map(0).length
 
   def reset() : Unit = {
     currentPosition = startPosition
   }
 
-  def mapString(): String = {
-    val currentMap = map.clone()
-    currentMap.update(currentPosition._1._1, currentMap.apply(currentPosition._1._1).updated(currentPosition._1._2, 'X'))
-    currentPosition._2 match {
-      case Some(position) =>
-        currentMap.update(position._1, currentMap.apply(position._1).updated(position._2, 'X'))
-      case None =>
-    }
-    currentMap.mkString("", "\n", "")
+  def coordinateInMap(coordinate: (Int, Int)): Boolean = {
+    coordinate._1 >= 0 && coordinate._1 < M && coordinate._2 >= 0 && coordinate._2 < N
   }
 
-  def printMap(): Unit = {
-    println(mapString())
-  }
-
-  def validPosition(position: ((Int, Int), Option[(Int, Int)])): Boolean = {
+  def validPosition(position: Position): Boolean = {
     position match {
       case (position, None) =>
         allowedPositions.contains(position)
       case (position1, Some(position2)) =>
-        ((allowedPositions.contains(position1) && allowedPositions.contains(position2))
+        (allowedPositions.contains(position1) && allowedPositions.contains(position2))
           ||
           (specialPositions.contains(position1) && allowedPositions.contains(position2))
           ||
 //          (specialPositions.contains(position1) && specialPositions.contains(position2)) // TODO: what happens if block is on two special positions
 //            ||
-          (allowedPositions.contains(position1) && specialPositions.contains(position2)))
+          (allowedPositions.contains(position1) && specialPositions.contains(position2))
     }
   }
 
 
-  def makeAMoveForSolver(move: Char): Option[((Int, Int), Option[(Int, Int)])] = {
+  def makeAMoveForSolver(move: Char): Option[Position] = {
     require(move == 'd' || move == 'u' || move == 'l' || move == 'r')
 
-    var nextPosition: ((Int, Int), Option[(Int, Int)]) = ((0, 0), None)
+    var nextPosition: Position = ((0, 0), None)
 
     (currentPosition, move) match {
       case ((position, None), 'd') =>
@@ -80,7 +73,7 @@ class Game(
         else
           nextPosition = ((position2._1, position2._2 + 1), None)
 
-      case _ => None
+      case _ => return None
     }
     //    println(f"Current position $currentPosition, next move : $nextPosition")
     currentPosition = nextPosition
@@ -93,9 +86,8 @@ class Game(
 
   def makeAMove(move: Char): Option[Boolean] = {
     makeAMoveForSolver(move) match {
-      case None => None
-      case Some(position) if position == endPosition => Some(true)
-      case Some(position) if position != endPosition => Some(false)
+      case None => None // invalid position
+      case Some(position) => Some(position == endPosition)
     }
   }
 

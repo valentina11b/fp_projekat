@@ -1,8 +1,18 @@
+package edited
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 class Person(val name: String, val age: Int) {
 
 }
 
 object tmp extends App {
+
+  Future {
+    Thread.sleep(150)
+    println("done in future")
+  }
 
   val people: Array[Person] = Array(Person("1", 15), Person("2", 19), Person("3", 15), Person("4", 15))
   val (minors, adults) = people partition (_.age < 18)
